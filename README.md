@@ -8,7 +8,7 @@ augments [Amazon Lightsail features in AWS CLI.][lscli]
 `lightsailctl` is executed **automatically** by AWS CLI when certain
 subcommands are used, such as `aws lightsail push-container-image`.
 
-```
+```sh
 $ lightsailctl --plugin -h
 
 Usage of `lightsailctl --plugin`:
@@ -18,14 +18,22 @@ Usage of `lightsailctl --plugin`:
         receive plugin payload on stdin
 ```
 
-## Installing From Source
+## Installing
+
+### Homebrew 🍻
+
+```sh
+$ brew install aws/tap/lightsailctl
+```
+
+### From Source
 
 `lightsailctl` is written in Go, so please [install Go.][getgo]
 
 After you clone this repo and open your terminal app in it, you'll be
 able to test and build this code like so:
 
-```
+```sh
 go test ./...
 go install ./...
 ```
@@ -42,7 +50,7 @@ system's `PATH` or add `$GOPATH/bin` to your system's `PATH`.
 
 Let's consider this command and see what actually happens:
 
-```
+```sh
 aws lightsail push-container-image \
  --service-name hello \
  --image hello-world:latest \
@@ -59,7 +67,7 @@ outsourced from AWS CLI to `lightsailctl`.
 Here's a shell invocation of `ligtsailctl` that approximates what AWS
 CLI does when the command above is invoked:
 
-```
+```sh
 $ echo '{
   "inputVersion": "1",
   "operation": "PushContainerImage",
