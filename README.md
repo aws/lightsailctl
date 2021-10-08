@@ -23,12 +23,25 @@ Usage of `lightsailctl --plugin`:
 ### Homebrew 🍻
 
 ```sh
-$ brew install aws/tap/lightsailctl
+brew install aws/tap/lightsailctl
 ```
 
 ### From Source
 
 `lightsailctl` is written in Go, so please [install Go.][getgo]
+
+If all you want is to install `lightsailctl` binary, then do the following:
+
+```sh
+go install github.com/aws/lightsailctl@latest
+```
+
+> **Note:** the executable is installed in the directory named by the `GOBIN`
+> environment variable, which defaults to `$GOPATH/bin` or `$HOME/go/bin` if
+> the `GOPATH` environment variable is not set (on Windows that is `%GOPATH%\bin`
+> or `%USERPROFILE%\go\bin` respectively).
+
+Keep reading if you want to work with `lightsailctl` source code locally.
 
 After you clone this repo and open your terminal app in it, you'll be
 able to test and build this code like so:
@@ -37,14 +50,6 @@ able to test and build this code like so:
 go test ./...
 go install ./...
 ```
-
-If `go install ./...` is successful, the resulting executable will be
-located at `$GOPATH/bin/lightsailctl`. Note that if `GOPATH` isn't set
-explicitly, OS-specific `GOPATH` will be in effect, for example:
-`$HOME/go` on Unix, and `%USERPROFILE%\go` on Windows.
-
-Copy the freshly-built `lightsailctl` binary to some location in your
-system's `PATH` or add `$GOPATH/bin` to your system's `PATH`.
 
 ## Under The Hood
 
