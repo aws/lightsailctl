@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/aws/aws-sdk-go v1.40.58
 	github.com/docker/docker v20.10.9+incompatible
+	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6
 	golang.org/x/mod v0.5.1
 )
 
@@ -19,7 +20,6 @@ require (
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
