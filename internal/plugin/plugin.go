@@ -41,7 +41,7 @@ func Main(progname string, args []string) {
 	const inputStdinFlag = "input-stdin"
 	fs.BoolVar(&inputStdin, inputStdinFlag, false, "receive plugin payload on stdin")
 
-	fs.Parse(args)
+	_ = fs.Parse(args)
 
 	if input == "" && !inputStdin {
 		fs.Usage()
