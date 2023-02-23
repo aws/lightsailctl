@@ -9,7 +9,7 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-const Version Semver = "v1.0.4"
+const Version Semver = "v1.0.5"
 
 type Semver string
 
