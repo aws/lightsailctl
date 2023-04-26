@@ -14,17 +14,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 )
 
 type fakeContainerAPIMetadataGetter string
 
-func (f fakeContainerAPIMetadataGetter) GetContainerAPIMetadataWithContext(
+func (f fakeContainerAPIMetadataGetter) GetContainerAPIMetadata(
 	context.Context,
 	*lightsail.GetContainerAPIMetadataInput,
-	...request.Option,
+	...func(*lightsail.Options),
 ) (*lightsail.GetContainerAPIMetadataOutput, error) {
 	switch {
 	case f == "":
@@ -33,10 +31,11 @@ func (f fakeContainerAPIMetadataGetter) GetContainerAPIMetadataWithContext(
 		return nil, errors.New(string(f))
 	default:
 		return &lightsail.GetContainerAPIMetadataOutput{
-			Metadata: []map[string]*string{
+			Metadata: []map[string]string{
 				{
-					"name":  aws.String("lightsailctlVersion"),
-					"value": aws.String(string(f))},
+					"name":  "lightsailctlVersion",
+					"value": string(f),
+				},
 			},
 		}, nil
 	}

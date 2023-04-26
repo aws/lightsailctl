@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/moby/term"
@@ -29,7 +30,7 @@ type DockerEngine struct {
 // and an image tag into a value that has everything that
 // one needs to push this image to a remote repo.
 type RemoteImage struct {
-	types.AuthConfig
+	registry.AuthConfig
 	Tag string
 }
 

@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/docker/docker/api/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	"github.com/docker/docker/api/types/registry"
 )
 
 func TestGenerateUniqueTag(t *testing.T) {
@@ -36,7 +36,7 @@ func TestGetServiceRegistryAuth(t *testing.T) {
 		t.Errorf("got out: %#v", got)
 	}
 
-	want := &types.AuthConfig{
+	want := &registry.AuthConfig{
 		Username:      "gollum",
 		Password:      "precious",
 		ServerAddress: "123456789012.dkr.ecr.so-fake-2.amazonaws.com/sr",
@@ -144,10 +144,10 @@ type fakeRegistryLoginCreator struct {
 	log               []string
 }
 
-func (f *fakeRegistryLoginCreator) CreateContainerServiceRegistryLoginWithContext(
+func (f *fakeRegistryLoginCreator) CreateContainerServiceRegistryLogin(
 	context.Context,
 	*lightsail.CreateContainerServiceRegistryLoginInput,
-	...request.Option,
+	...func(*lightsail.Options),
 ) (*lightsail.CreateContainerServiceRegistryLoginOutput, error) {
 	op := "create login"
 	if f.failToCreateLogin {
@@ -155,10 +155,11 @@ func (f *fakeRegistryLoginCreator) CreateContainerServiceRegistryLoginWithContex
 	}
 	f.log = append(f.log, op)
 	return &lightsail.CreateContainerServiceRegistryLoginOutput{
-		RegistryLogin: new(lightsail.ContainerServiceRegistryLogin).
-			SetUsername("gollum").
-			SetPassword("precious").
-			SetRegistry("123456789012.dkr.ecr.so-fake-2.amazonaws.com"),
+		RegistryLogin: &types.ContainerServiceRegistryLogin{
+			Username: aws.String("gollum"),
+			Password: aws.String("precious"),
+			Registry: aws.String("123456789012.dkr.ecr.so-fake-2.amazonaws.com"),
+		},
 	}, nil
 }
 
@@ -167,23 +168,23 @@ type fakeLightsailImageOperator struct {
 	failToRegister bool
 }
 
-func (f *fakeLightsailImageOperator) RegisterContainerImageWithContext(
+func (f *fakeLightsailImageOperator) RegisterContainerImage(
 	_ context.Context,
 	in *lightsail.RegisterContainerImageInput,
-	_ ...request.Option,
+	_ ...func(*lightsail.Options),
 ) (*lightsail.RegisterContainerImageOutput, error) {
 	op := fmt.Sprintf("register (%s, %s, %s)",
-		aws.StringValue(in.ServiceName),
-		aws.StringValue(in.Label),
-		aws.StringValue(in.Digest))
+		aws.ToString(in.ServiceName),
+		aws.ToString(in.Label),
+		aws.ToString(in.Digest))
 	if f.failToRegister {
 		return nil, fmt.Errorf("failed: %s", op)
 	}
 	f.log = append(f.log, op)
 	return &lightsail.RegisterContainerImageOutput{
-		ContainerImage: &lightsail.ContainerImage{
+		ContainerImage: &types.ContainerImage{
 			Digest: in.Digest,
-			Image:  aws.String(":" + aws.StringValue(in.ServiceName) + "." + aws.StringValue(in.Label) + ".12345"),
+			Image:  aws.String(":" + aws.ToString(in.ServiceName) + "." + aws.ToString(in.Label) + ".12345"),
 		},
 	}, nil
 }
