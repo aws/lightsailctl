@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.214
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587
-	golang.org/x/mod v0.9.0
+	golang.org/x/mod v0.10.0
 )
 
 require (
