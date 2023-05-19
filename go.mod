@@ -3,7 +3,7 @@ module github.com/aws/lightsailctl
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.44.214
+	github.com/aws/aws-sdk-go v1.44.266
 	github.com/docker/docker v23.0.6+incompatible
 	github.com/moby/term v0.5.0
 	golang.org/x/mod v0.10.0
