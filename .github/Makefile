@@ -10,7 +10,7 @@ version = $(shell $(local_exe) --version)
 # Note that flags "-s -w" disable DWARF and symbol table generation
 # to reduce binary size.
 build = cd $(module) && \
-	env CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(1) build -ldflags "-s -w" \
+	env CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(1) build -trimpath -ldflags "-s -w" \
 	-o $(bin)/$(call version)/$(2)-$(3)/$(app)$(4) ./main.go
 
 .PHONY: local test xcompile

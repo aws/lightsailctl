@@ -13,21 +13,19 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/defaults"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/lightsailctl/internal"
 	"github.com/aws/lightsailctl/internal/cs"
+	smithyMW "github.com/aws/smithy-go/middleware"
 )
 
 func Main(progname string, args []string) {
@@ -63,7 +61,7 @@ func Main(progname string, args []string) {
 	// This is a logger used for extra diagnostics, when the debugging mode is on.
 	debugLog := log.New(log.Writer(), log.Prefix(), log.Flags())
 	if !in.Configuration.Debug {
-		debugLog.SetOutput(ioutil.Discard)
+		debugLog.SetOutput(io.Discard)
 	}
 
 	if err := invokeOperation(context.Background(), in, debugLog); err != nil {
@@ -90,53 +88,49 @@ type OperationConfig struct {
 	CLIVersion string `json:"cliVersion"`
 }
 
-func (c *OperationConfig) newAWSSession() (*session.Session, error) {
-	o := session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}
+func (c *OperationConfig) awsConfig(ctx context.Context) (aws.Config, error) {
+	var opts []func(*config.LoadOptions) error
 
-	o.Handlers = defaults.Handlers()
-	o.Handlers.Build.PushBackNamed(request.NamedHandler{
-		Name: "lightsailctl.UserAgentHandler",
-		Fn: request.MakeAddToUserAgentHandler(
-			"lightsailctl", internal.Version.String(),
-			// extra runtime info:
-			runtime.Version(), runtime.GOOS, runtime.GOARCH),
-	})
+	opts = append(opts, config.WithAPIOptions([]func(*smithyMW.Stack) error{
+		middleware.AddUserAgentKeyValue("lightsailctl", internal.Version.String()),
+	}))
 
 	if c.Region != "" {
-		o.Config.WithRegion(c.Region)
+		opts = append(opts, config.WithRegion(c.Region))
 	}
 
 	if ep := strings.TrimRight(c.Endpoint, "/"); ep != "" {
-		o.Config.WithEndpoint(ep)
+		opts = append(opts, config.WithEndpointResolverWithOptions(
+			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				return aws.Endpoint{URL: ep}, nil
+			})))
 	}
 
 	if c.Profile != "" {
-		o.Profile = c.Profile
+		opts = append(opts, config.WithSharedConfigProfile(c.Profile))
 	}
 
 	if c.Debug {
-		o.Config.WithLogLevel(aws.LogDebugWithSigning | aws.LogDebugWithHTTPBody)
+		opts = append(opts, config.WithClientLogMode(aws.LogSigning|aws.LogRequestWithBody|aws.LogResponseWithBody))
 	}
 
 	if c.DoNotVerifySSL {
-		o.Config.WithHTTPClient(&http.Client{
+		opts = append(opts, config.WithHTTPClient(&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
-		})
+		}))
 	}
 
 	if c.CABundle != "" {
-		b, err := ioutil.ReadFile(c.CABundle)
+		b, err := os.ReadFile(c.CABundle)
 		if err != nil {
-			return nil, fmt.Errorf("read CA bundle file: %v", err)
+			return aws.Config{}, fmt.Errorf("read CA bundle file: %w", err)
 		}
-		o.CustomCABundle = bytes.NewReader(b)
+		opts = append(opts, config.WithCustomCABundle(bytes.NewReader(b)))
 	}
 
-	return session.NewSessionWithOptions(o)
+	return config.LoadDefaultConfig(ctx, opts...)
 }
 
 func parseInput(r io.Reader) (*Input, error) {
@@ -153,21 +147,25 @@ func parseInput(r io.Reader) (*Input, error) {
 func invokeOperation(ctx context.Context, in *Input, debugLog *log.Logger) error {
 	switch in.Operation {
 	case "PushContainerImage":
-		s, err := in.Configuration.newAWSSession()
+		cfg, err := in.Configuration.awsConfig(ctx)
 		if err != nil {
 			return err
 		}
-		ls := lightsail.New(s)
+
+		ls := lightsail.NewFromConfig(cfg)
+
 		internal.CheckForUpdates(ctx, debugLog, ls, internal.Version)
 
 		r, err := parsePushContainerImagePayload(in.Payload)
 		if err != nil {
 			return fmt.Errorf("unable to parse the input's payload field: %w", err)
 		}
+
 		dc, err := cs.NewDockerEngine(ctx)
 		if err != nil {
 			return err
 		}
+
 		if err := cs.PushImage(ctx, r, ls, dc); err != nil {
 			return err
 		}

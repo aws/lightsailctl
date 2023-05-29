@@ -13,10 +13,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/docker/docker/api/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/docker/docker/api/types/registry"
 )
 
 type PushImageInput struct {
@@ -26,20 +25,20 @@ type PushImageInput struct {
 }
 
 type RegistryLoginCreator interface {
-	CreateContainerServiceRegistryLoginWithContext(
+	CreateContainerServiceRegistryLogin(
 		context.Context,
 		*lightsail.CreateContainerServiceRegistryLoginInput,
-		...request.Option,
+		...func(*lightsail.Options),
 	) (*lightsail.CreateContainerServiceRegistryLoginOutput, error)
 }
 
 type LightsailImageOperator interface {
 	RegistryLoginCreator
 
-	RegisterContainerImageWithContext(
+	RegisterContainerImage(
 		context.Context,
 		*lightsail.RegisterContainerImageInput,
-		...request.Option,
+		...func(*lightsail.Options),
 	) (*lightsail.RegisterContainerImageOutput, error)
 }
 
@@ -69,21 +68,22 @@ func PushImage(ctx context.Context, in *PushImageInput, lio LightsailImageOperat
 		return err
 	}
 
-	registered, err := lio.RegisterContainerImageWithContext(
+	registered, err := lio.RegisterContainerImage(
 		ctx,
-		new(lightsail.RegisterContainerImageInput).
-			SetServiceName(in.Service).
-			SetLabel(in.Label).
-			SetDigest(digest),
+		&lightsail.RegisterContainerImageInput{
+			ServiceName: &in.Service,
+			Label:       &in.Label,
+			Digest:      &digest,
+		},
 	)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Digest: %s\nImage %q registered.\nRefer to this image as %q in deployments.\n",
-		aws.StringValue(registered.ContainerImage.Digest),
+		aws.ToString(registered.ContainerImage.Digest),
 		in.Image,
-		aws.StringValue(registered.ContainerImage.Image))
+		aws.ToString(registered.ContainerImage.Image))
 
 	return nil
 }
@@ -96,8 +96,8 @@ func PushImage(ctx context.Context, in *PushImageInput, lio LightsailImageOperat
 // when RegisterContainerImage API is called with specific image
 // digests. The purpose of this repo is to keep images that are
 // strictly related to your Lightsail container service deployments.
-func getServiceRegistryAuth(ctx context.Context, rlc RegistryLoginCreator) (*types.AuthConfig, error) {
-	out, err := rlc.CreateContainerServiceRegistryLoginWithContext(
+func getServiceRegistryAuth(ctx context.Context, rlc RegistryLoginCreator) (*registry.AuthConfig, error) {
+	out, err := rlc.CreateContainerServiceRegistryLogin(
 		ctx,
 		new(lightsail.CreateContainerServiceRegistryLoginInput),
 	)
@@ -105,10 +105,10 @@ func getServiceRegistryAuth(ctx context.Context, rlc RegistryLoginCreator) (*typ
 		return nil, err
 	}
 
-	return &types.AuthConfig{
-		Username:      aws.StringValue(out.RegistryLogin.Username),
-		Password:      aws.StringValue(out.RegistryLogin.Password),
-		ServerAddress: aws.StringValue(out.RegistryLogin.Registry) + "/sr",
+	return &registry.AuthConfig{
+		Username:      aws.ToString(out.RegistryLogin.Username),
+		Password:      aws.ToString(out.RegistryLogin.Password),
+		ServerAddress: aws.ToString(out.RegistryLogin.Registry) + "/sr",
 	}, nil
 }
 

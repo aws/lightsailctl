@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 )
 
 type ContainerAPIMetadataGetter interface {
-	GetContainerAPIMetadataWithContext(
+	GetContainerAPIMetadata(
 		context.Context,
 		*lightsail.GetContainerAPIMetadataInput,
-		...request.Option,
+		...func(*lightsail.Options),
 	) (*lightsail.GetContainerAPIMetadataOutput, error)
 }
 
@@ -44,15 +42,15 @@ func getLatestLightsailctlVersion(
 	ctx context.Context,
 	g ContainerAPIMetadataGetter,
 ) (Semver, error) {
-	res, err := g.GetContainerAPIMetadataWithContext(ctx, new(lightsail.GetContainerAPIMetadataInput))
+	res, err := g.GetContainerAPIMetadata(ctx, &lightsail.GetContainerAPIMetadataInput{})
 	if err != nil {
-		return "", fmt.Errorf("could not get latest lightsailctl version: %v", err)
+		return "", fmt.Errorf("could not get latest lightsailctl version: %w", err)
 	}
 
 	var rawSemver string
 	for _, md := range res.Metadata {
-		if v := aws.StringValue(md["name"]); v == "lightsailctlVersion" {
-			rawSemver = aws.StringValue(md["value"])
+		if md["name"] == "lightsailctlVersion" {
+			rawSemver = md["value"]
 		}
 	}
 
