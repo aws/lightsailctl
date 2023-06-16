@@ -3,7 +3,7 @@ module github.com/aws/lightsailctl
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.18.0
+	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.25
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.26.6
 	github.com/aws/smithy-go v1.13.5
