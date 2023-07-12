@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.27
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
 	github.com/aws/smithy-go v1.13.5
-	github.com/docker/docker v24.0.3+incompatible
+	github.com/docker/docker v24.0.4+incompatible
 	github.com/moby/term v0.5.0
 	golang.org/x/mod v0.12.0
 )
@@ -33,10 +33,10 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/stretchr/testify v1.8.3 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.11.0 // indirect
-	gotest.tools/v3 v3.4.0 // indirect
+	gotest.tools/v3 v3.5.0 // indirect
 )
