@@ -9,7 +9,7 @@ require (
 	github.com/aws/smithy-go v1.15.0
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/moby/term v0.5.0
-	golang.org/x/mod v0.12.0
+	golang.org/x/mod v0.13.0
 )
 
 require (
