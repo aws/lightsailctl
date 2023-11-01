@@ -3,10 +3,10 @@ module github.com/aws/lightsailctl
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.21.2
+	github.com/aws/aws-sdk-go-v2 v1.22.1
 	github.com/aws/aws-sdk-go-v2/config v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.7
-	github.com/aws/smithy-go v1.15.0
+	github.com/aws/smithy-go v1.16.0
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/moby/term v0.5.0
 	golang.org/x/mod v0.13.0
