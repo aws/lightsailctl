@@ -36,10 +36,8 @@ If all you want is to install `lightsailctl` binary, then do the following:
 go install github.com/aws/lightsailctl@latest
 ```
 
-> **Note:** the executable is installed in the directory named by the `GOBIN`
-> environment variable, which defaults to `$GOPATH/bin` or `$HOME/go/bin` if
-> the `GOPATH` environment variable is not set (on Windows that is `%GOPATH%\bin`
-> or `%USERPROFILE%\go\bin` respectively).
+> **Note:** the executable is installed in `$HOME/go/bin` on macOS/Linux/Unix
+> and in `%USERPROFILE%\go\bin` on Windows.
 
 Keep reading if you want to work with `lightsailctl` source code locally.
 
