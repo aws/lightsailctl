@@ -110,5 +110,5 @@ Please read about [Contributing Guidelines.](CONTRIBUTING.md)
 This project is licensed under the Apache-2.0 License.
 
 [lscli]: https://docs.aws.amazon.com/cli/latest/reference/lightsail/index.html
-[getgo]: https://golang.org/doc/install
+[getgo]: https://go.dev/doc/install
 [issue]: https://github.com/aws/lightsailctl/issues/new
