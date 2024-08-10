@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -51,8 +51,8 @@ func (e *DockerEngine) TagImage(ctx context.Context, source, target string) erro
 	return e.c.ImageTag(ctx, source, target)
 }
 
-func (e *DockerEngine) UntagImage(ctx context.Context, image string) error {
-	_, err := e.c.ImageRemove(ctx, image, types.ImageRemoveOptions{})
+func (e *DockerEngine) UntagImage(ctx context.Context, imageID string) error {
+	_, err := e.c.ImageRemove(ctx, imageID, image.RemoveOptions{})
 	return err
 }
 
@@ -61,7 +61,7 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 	if err != nil {
 		return "", err
 	}
-	pushRes, err := e.c.ImagePush(ctx, remoteImage.Ref(), types.ImagePushOptions{
+	pushRes, err := e.c.ImagePush(ctx, remoteImage.Ref(), image.PushOptions{
 		RegistryAuth: base64.URLEncoding.EncodeToString(authBytes),
 	})
 	if err != nil {
