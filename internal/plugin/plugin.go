@@ -99,13 +99,6 @@ func (c *OperationConfig) awsConfig(ctx context.Context) (aws.Config, error) {
 		opts = append(opts, config.WithRegion(c.Region))
 	}
 
-	if ep := strings.TrimRight(c.Endpoint, "/"); ep != "" {
-		opts = append(opts, config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{URL: ep}, nil
-			})))
-	}
-
 	if c.Profile != "" {
 		opts = append(opts, config.WithSharedConfigProfile(c.Profile))
 	}
@@ -152,7 +145,11 @@ func invokeOperation(ctx context.Context, in *Input, debugLog *log.Logger) error
 			return err
 		}
 
-		ls := lightsail.NewFromConfig(cfg)
+		ls := lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
+			if ep := strings.TrimRight(in.Configuration.Endpoint, "/"); ep != "" {
+				o.BaseEndpoint = &ep
+			}
+		})
 
 		internal.CheckForUpdates(ctx, debugLog, ls, internal.Version)
 
