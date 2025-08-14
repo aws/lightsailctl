@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.27
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3
 	github.com/aws/smithy-go v1.20.3
-	github.com/docker/docker v27.1.1+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/moby/term v0.5.0
 	golang.org/x/mod v0.20.0
 )
