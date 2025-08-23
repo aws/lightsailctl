@@ -82,7 +82,7 @@ func TestPushImageErrors(t *testing.T) {
 		},
 		{
 			imgo: fakeImageOperator{failToPush: true},
-			want: `failed: push "123456789012.dkr.ecr.so-fake-2.amazonaws.com/sr:1611800397000000000-c5h66p35cpjmg"`,
+			want: `image "nginx:latest" push error: failed: push "123456789012.dkr.ecr.so-fake-2.amazonaws.com/sr:1611800397000000000-c5h66p35cpjmg"`,
 		},
 	} {
 		t.Run(strconv.Itoa(i+1), func(t *testing.T) {

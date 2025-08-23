@@ -65,7 +65,7 @@ func PushImage(ctx context.Context, in *PushImageInput, lio LightsailImageOperat
 
 	digest, err := imgo.PushImage(ctx, remoteImage)
 	if err != nil {
-		return err
+		return fmt.Errorf("image %q push error: %w", in.Image, err)
 	}
 
 	registered, err := lio.RegisterContainerImage(
