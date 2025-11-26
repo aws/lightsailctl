@@ -14,7 +14,6 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/pkg/jsonmessage"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 const exampleDigest = "sha256:cafe1234cafe1234cafe1234cafe1234cafe1234cafe1234abce5678cdef9012"
@@ -154,11 +153,14 @@ func TestDockerEngine(t *testing.T) {
 			}
 			internal.Assert(t, "digest", exampleDigest, digest)
 			internal.Assert(t, "image", "example.com/httpd:v2.0.0", test.pusher.gotImage)
-			internal.Assert(t, "options", image.PushOptions{
+			// Note: Platform is only set if Docker client is available and API version >= 1.46
+			// In tests with fake implementations (no Docker client), Platform won't be set
+			expectedOptions := image.PushOptions{
 				// This is just base64 encoding of the auth config, provided above.
 				RegistryAuth: "eyJ1c2VybmFtZSI6InVzZXIiLCJwYXNzd29yZCI6IjQyIiwic2VydmVyYWRkcmVzcyI6ImV4YW1wbGUuY29tL2h0dHBkIn0=",
-				Platform:     &ocispec.Platform{OS: "linux", Architecture: "amd64"},
-			}, test.pusher.gotOptions)
+				// Platform is nil because dc is nil in test
+			}
+			internal.Assert(t, "options", expectedOptions, test.pusher.gotOptions)
 		})
 	}
 }
