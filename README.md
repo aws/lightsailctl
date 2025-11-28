@@ -49,6 +49,10 @@ go test ./...
 go install ./...
 ```
 
+### Windows
+
+For Windows installation instructions, please see [Install Docker, AWS CLI, and the Lightsail Control plugin for containers](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-install-software.html#install-lightsailctl-on-windows).
+
 ## Under The Hood
 
 Let's consider this command and see what actually happens:
