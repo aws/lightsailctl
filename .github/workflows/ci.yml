@@ -14,9 +14,4 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - uses: golangci/golangci-lint-action@v9
-        with:
-          version: latest
-          args: --timeout 5m0s
-      - run: make test
-      - run: make tools snapshot
+      - run: make tools ci snapshot
