@@ -100,7 +100,7 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 		}
 		return "", err
 	}
-	defer pushOutput.Close()
+	defer func() { _ = pushOutput.Close() }()
 
 	var digestFromStatus, digestFromAux string
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
@@ -136,7 +136,7 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 func scanStatuses(digest *string, input io.Reader, skips ...string) io.Reader {
 	r, w := io.Pipe()
 	go func() {
-		defer w.Close()
+		defer func() { _ = w.Close() }()
 		dec := json.NewDecoder(input)
 		enc := json.NewEncoder(w)
 	InputLoop:
