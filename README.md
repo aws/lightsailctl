@@ -49,6 +49,19 @@ go test ./...
 go install ./...
 ```
 
+## Development
+
+The `Makefile` wraps the common tasks:
+
+```sh
+make tools     # install goreleaser and golangci-lint (one-time)
+make lint      # run golangci-lint
+make test      # run unit tests
+make ci        # lint + test (same as CI)
+make snapshot  # build local release artifacts via goreleaser (dist/)
+make help      # list targets
+```
+
 ## Under The Hood
 
 Let's consider this command and see what actually happens:
@@ -67,7 +80,7 @@ service deployments for service `hello`.
 This container image pushing logic requires a number of steps that are
 outsourced from AWS CLI to `lightsailctl`.
 
-Here's a shell invocation of `ligtsailctl` that approximates what AWS
+Here's a shell invocation of `lightsailctl` that approximates what AWS
 CLI does when the command above is invoked:
 
 ```sh
@@ -105,6 +118,13 @@ You are welcome to write up an [issue][issue] for us.
 
 Please read about [Contributing Guidelines.](CONTRIBUTING.md)
 
+## Releases
+
+Releases are automated: pushing a `v*.*.*` tag triggers
+[`.github/workflows/release.yml`][release], which uses
+[GoReleaser][goreleaser] to cross-compile binaries and attach them to a
+new GitHub release.
+
 ## License
 
 This project is licensed under the Apache-2.0 License.
@@ -112,3 +132,5 @@ This project is licensed under the Apache-2.0 License.
 [lscli]: https://docs.aws.amazon.com/cli/latest/reference/lightsail/index.html
 [getgo]: https://go.dev/doc/install
 [issue]: https://github.com/aws/lightsailctl/issues/new
+[release]: .github/workflows/release.yml
+[goreleaser]: https://goreleaser.com/
