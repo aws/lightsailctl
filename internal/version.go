@@ -9,7 +9,10 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-const Version Semver = "v1.0.7"
+// Managed by ldflags -X in .goreleaser.yaml.
+var versionString = "v1.0.7"
+
+func Version() Semver { return Semver(versionString) }
 
 type Semver string
 
