@@ -93,7 +93,7 @@ func (c *OperationConfig) awsConfig(ctx context.Context) (aws.Config, error) {
 	var opts []func(*config.LoadOptions) error
 
 	opts = append(opts, config.WithAPIOptions([]func(*smithyMW.Stack) error{
-		middleware.AddUserAgentKeyValue("lightsailctl", internal.Version.String()),
+		middleware.AddUserAgentKeyValue("lightsailctl", internal.Version().String()),
 	}))
 
 	if c.Region != "" {
@@ -152,7 +152,7 @@ func invokeOperation(ctx context.Context, in *Input, debugLog *log.Logger) error
 			}
 		})
 
-		internal.CheckForUpdates(ctx, debugLog, ls, internal.Version)
+		internal.CheckForUpdates(ctx, debugLog, ls, internal.Version())
 
 		r, err := parsePushContainerImagePayload(in.Payload)
 		if err != nil {

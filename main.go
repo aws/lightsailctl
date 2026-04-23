@@ -24,7 +24,7 @@ func main() {
 	case len(os.Args) > 1 && pluginPattern.MatchString(os.Args[1]):
 		pluginMain(os.Args[0]+" "+os.Args[1], os.Args[2:])
 	case len(os.Args) > 1 && getverPattern.MatchString(os.Args[1]):
-		fmt.Println(internal.Version)
+		fmt.Println(internal.Version())
 	default:
 		log.Fatalf("%s can't be used directly, it is meant to be invoked by AWS CLI", os.Args[0])
 	}

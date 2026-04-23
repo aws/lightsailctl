@@ -10,8 +10,7 @@ import (
 )
 
 func TestVersionGlobalIsValid(t *testing.T) {
-	if !internal.Version.IsValid() {
-		t.Errorf("internal.Version value %q is not a valid semver",
-			string(internal.Version))
+	if version := internal.Version(); !version.IsValid() {
+		t.Errorf("internal.Version value %q is not a valid semver", string(version))
 	}
 }
