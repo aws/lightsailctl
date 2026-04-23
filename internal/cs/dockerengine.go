@@ -17,6 +17,7 @@ import (
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
+	"github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/moby/term"
@@ -51,6 +52,7 @@ type DockerEngine struct {
 			ctx context.Context, image string, options image.PushOptions,
 		) (io.ReadCloser, error)
 	}
+	dc *client.Client
 }
 
 // RemoteImage combines remote server auth details, address
@@ -71,7 +73,7 @@ func NewDockerEngine(ctx context.Context) (*DockerEngine, error) {
 		return nil, err
 	}
 	dc.NegotiateAPIVersion(ctx)
-	return &DockerEngine{it: dc, ir: dc, ip: dc}, nil
+	return &DockerEngine{it: dc, ir: dc, ip: dc, dc: dc}, nil
 }
 
 func (e *DockerEngine) TagImage(ctx context.Context, source, target string) error {
@@ -90,17 +92,20 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 	}
 
 	platform := &ocispec.Platform{OS: "linux", Architecture: "amd64"}
-	pushOutput, err := e.ip.ImagePush(ctx, remoteImage.Ref(), image.PushOptions{
-		RegistryAuth: base64.URLEncoding.EncodeToString(authBytes),
-		Platform:     platform,
-	})
+	opts := image.PushOptions{RegistryAuth: base64.URLEncoding.EncodeToString(authBytes)}
+	if e.dc != nil {
+		if sv, err := e.dc.ServerVersion(ctx); err == nil && versions.GreaterThanOrEqualTo(sv.APIVersion, "1.46") {
+			opts.Platform = platform
+		}
+	}
+	pushOutput, err := e.ip.ImagePush(ctx, remoteImage.Ref(), opts)
 	if err != nil {
 		if platformErrorRE(platform).MatchString(err.Error()) {
 			return "", &platformError{wantPlatform: platform, cause: err}
 		}
 		return "", err
 	}
-	defer pushOutput.Close()
+	defer func() { _ = pushOutput.Close() }()
 
 	var digestFromStatus, digestFromAux string
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
@@ -136,7 +141,7 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 func scanStatuses(digest *string, input io.Reader, skips ...string) io.Reader {
 	r, w := io.Pipe()
 	go func() {
-		defer w.Close()
+		defer func() { _ = w.Close() }()
 		dec := json.NewDecoder(input)
 		enc := json.NewEncoder(w)
 	InputLoop:
