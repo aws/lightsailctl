@@ -1,55 +1,17 @@
 name: ci
 
 on:
+  push:
   pull_request:
-    branches: [ main ]
-
-  # Ensure this workflow can be run manually from the Actions tab.
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: go.mod
-
-      - name: Build binaries
-        run: make -f .github/Makefile xcompile
-
-  test:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-
-      - name: Run tests
-        run: go test ./...
-
-  linters:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: go.mod
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout 5m0s
+      - run: make tools ci snapshot
