@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -202,4 +203,37 @@ func Example_scanStatuses() {
 	// {"status":"keep me"}
 	// {"status":"also keep me!"}
 	// {"status":"... digest: sha256:cafe1234cafe1234cafe1234cafe1234cafe1234cafe1234abce5678cdef9012 ..."}
+}
+
+type fakeImageInspector struct {
+	os, arch string
+	fail     error
+}
+
+func (f *fakeImageInspector) ImageInspectWithRaw(_ context.Context, _ string) (types.ImageInspect, []byte, error) {
+	if f.fail != nil {
+		return types.ImageInspect{}, nil, f.fail
+	}
+	return types.ImageInspect{Os: f.os, Architecture: f.arch}, nil, nil
+}
+
+func TestCheckPlatform(t *testing.T) {
+	ctx := context.Background()
+	for _, test := range []struct {
+		name    string
+		os      string
+		arch    string
+		fail    error
+		wantErr string
+	}{
+		{name: "linux/amd64 ok", os: "linux", arch: "amd64"},
+		{name: "linux/arm64 rejected", os: "linux", arch: "arm64", wantErr: "image does not provide linux/amd64 platform"},
+		{name: "inspect error", fail: io.EOF, wantErr: `inspect image "test:latest": EOF`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			e := &DockerEngine{ii: &fakeImageInspector{os: test.os, arch: test.arch, fail: test.fail}}
+			err := e.CheckPlatform(ctx, "test:latest")
+			internal.AssertError(t, test.wantErr, err)
+		})
+	}
 }

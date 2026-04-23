@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/api/types/versions"
@@ -52,6 +53,9 @@ type DockerEngine struct {
 			ctx context.Context, image string, options image.PushOptions,
 		) (io.ReadCloser, error)
 	}
+	ii interface {
+		ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
+	}
 	dc *client.Client
 }
 
@@ -73,7 +77,7 @@ func NewDockerEngine(ctx context.Context) (*DockerEngine, error) {
 		return nil, err
 	}
 	dc.NegotiateAPIVersion(ctx)
-	return &DockerEngine{it: dc, ir: dc, ip: dc, dc: dc}, nil
+	return &DockerEngine{it: dc, ir: dc, ip: dc, ii: dc, dc: dc}, nil
 }
 
 func (e *DockerEngine) TagImage(ctx context.Context, source, target string) error {
@@ -83,6 +87,20 @@ func (e *DockerEngine) TagImage(ctx context.Context, source, target string) erro
 func (e *DockerEngine) UntagImage(ctx context.Context, imageID string) error {
 	_, err := e.ir.ImageRemove(ctx, imageID, image.RemoveOptions{})
 	return err
+}
+
+func (e *DockerEngine) CheckPlatform(ctx context.Context, imageRef string) error {
+	inspect, _, err := e.ii.ImageInspectWithRaw(ctx, imageRef)
+	if err != nil {
+		return fmt.Errorf("inspect image %q: %w", imageRef, err)
+	}
+	if inspect.Architecture != "amd64" || inspect.Os != "linux" {
+		return &platformError{
+			wantPlatform: &ocispec.Platform{OS: "linux", Architecture: "amd64"},
+			cause:        fmt.Errorf("image %q is %s/%s but Lightsail only supports amd64 (x86_64) architecture", imageRef, inspect.Os, inspect.Architecture),
+		}
+	}
+	return nil
 }
 
 func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (string, error) {

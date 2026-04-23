@@ -65,6 +65,10 @@ func TestPushImageErrors(t *testing.T) {
 	in := &PushImageInput{Service: "doge", Image: "nginx:latest", Label: "www"}
 	for i, test := range []test{
 		{
+			imgo: fakeImageOperator{failPlatformCheck: true},
+			want: "image does not provide linux/amd64 platform",
+		},
+		{
 			ls:   fakeLightsailImageOperator{fakeRegistryLoginCreator: fakeRegistryLoginCreator{failToCreateLogin: true}},
 			want: "failed: create login",
 		},
@@ -190,8 +194,15 @@ func (f *fakeLightsailImageOperator) RegisterContainerImage(
 }
 
 type fakeImageOperator struct {
-	failToTag, failToUntag, failToPush bool
-	log                                []string
+	failToTag, failToUntag, failToPush, failPlatformCheck bool
+	log                                                   []string
+}
+
+func (f *fakeImageOperator) CheckPlatform(_ context.Context, imageRef string) error {
+	if f.failPlatformCheck {
+		return fmt.Errorf("image does not provide linux/amd64 platform")
+	}
+	return nil
 }
 
 func (f *fakeImageOperator) TagImage(_ context.Context, source, target string) error {
