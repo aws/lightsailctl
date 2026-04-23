@@ -39,7 +39,7 @@ func (pe *platformError) Unwrap() error { return pe.cause }
 
 // dockerClient is the subset of the Docker client API that DockerEngine needs.
 type dockerClient interface {
-	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
+	ImageInspectWithRaw(ctx context.Context, imageID string) (image.InspectResponse, []byte, error)
 	ImageTag(ctx context.Context, source, target string) error
 	ImageRemove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error)
 	ImagePush(ctx context.Context, image string, options image.PushOptions) (io.ReadCloser, error)
