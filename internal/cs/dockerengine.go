@@ -82,6 +82,13 @@ func (e *DockerEngine) UntagImage(ctx context.Context, imageID string) error {
 }
 
 func (e *DockerEngine) CheckPlatform(ctx context.Context, imageRef string) error {
+	// Newer Docker daemons (API >= 1.46) accept a Platform field in ImagePush
+	// and will transparently select/pull the requested variant from a
+	// multi-arch manifest. Skip the local inspect check in that case so that
+	// users on (e.g.) arm64 hosts can still push multi-arch images.
+	if sv, err := e.client.ServerVersion(ctx); err == nil && versions.GreaterThanOrEqualTo(sv.APIVersion, "1.46") {
+		return nil
+	}
 	inspect, _, err := e.client.ImageInspectWithRaw(ctx, imageRef)
 	if err != nil {
 		return fmt.Errorf("inspect image %q: %w", imageRef, err)

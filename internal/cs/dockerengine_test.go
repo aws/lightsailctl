@@ -195,18 +195,21 @@ func TestDockerEnginePush(t *testing.T) {
 func TestCheckPlatform(t *testing.T) {
 	ctx := context.Background()
 	for _, test := range []struct {
-		name    string
-		os      string
-		arch    string
-		fail    error
-		wantErr string
+		name       string
+		apiVersion string
+		os         string
+		arch       string
+		fail       error
+		wantErr    string
 	}{
-		{name: "linux/amd64 ok", os: "linux", arch: "amd64"},
-		{name: "linux/arm64 rejected", os: "linux", arch: "arm64", wantErr: "image does not provide linux/amd64 platform"},
-		{name: "inspect error", fail: io.EOF, wantErr: `inspect image "test:latest": EOF`},
+		{name: "old daemon, linux/amd64 ok", apiVersion: "1.45", os: "linux", arch: "amd64"},
+		{name: "old daemon, linux/arm64 rejected", apiVersion: "1.45", os: "linux", arch: "arm64", wantErr: "image does not provide linux/amd64 platform"},
+		{name: "old daemon, inspect error", apiVersion: "1.45", fail: io.EOF, wantErr: `inspect image "test:latest": EOF`},
+		{name: "new daemon, arm64 allowed (push will select amd64 from manifest)", apiVersion: "1.46", os: "linux", arch: "arm64"},
+		{name: "new daemon, skips inspect", apiVersion: "1.47", fail: io.EOF},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			fc := &fakeDockerClient{inspectOS: test.os, inspectArch: test.arch, inspectErr: test.fail}
+			fc := &fakeDockerClient{apiVersion: test.apiVersion, inspectOS: test.os, inspectArch: test.arch, inspectErr: test.fail}
 			e := &DockerEngine{client: fc}
 			err := e.CheckPlatform(ctx, "test:latest")
 			internal.AssertError(t, test.wantErr, err)
