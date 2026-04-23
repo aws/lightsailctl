@@ -1,10 +1,28 @@
 version: 2
 updates:
-- package-ecosystem: "gomod"
-  directory: "/"
-  open-pull-requests-limit: 0
-  schedule:
-    interval: "monthly"
-    day: "friday"
-    time: "13:00"
-    timezone: "America/Los_Angeles"
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    groups:
+      aws-sdk:
+        patterns:
+          - "github.com/aws/aws-sdk-go-v2*"
+          - "github.com/aws/smithy-go"
+      charm:
+        patterns:
+          - "charm.land/*"
+          - "github.com/charmbracelet/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 3

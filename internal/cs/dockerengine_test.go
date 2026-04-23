@@ -10,10 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/lightsailctl/internal"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/pkg/jsonmessage"
+
+	"github.com/aws/lightsailctl/internal"
 )
 
 const exampleDigest = "sha256:cafe1234cafe1234cafe1234cafe1234cafe1234cafe1234abce5678cdef9012"

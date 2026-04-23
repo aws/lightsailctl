@@ -23,9 +23,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	smithyMW "github.com/aws/smithy-go/middleware"
+
 	"github.com/aws/lightsailctl/internal"
 	"github.com/aws/lightsailctl/internal/cs"
-	smithyMW "github.com/aws/smithy-go/middleware"
 )
 
 func Main(progname string, args []string) {
