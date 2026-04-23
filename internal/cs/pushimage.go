@@ -43,6 +43,7 @@ type LightsailImageOperator interface {
 }
 
 type ImageOperator interface {
+	CheckPlatform(ctx context.Context, imageRef string) error
 	TagImage(ctx context.Context, source, target string) error
 	UntagImage(ctx context.Context, image string) error
 	PushImage(ctx context.Context, r RemoteImage) (digest string, err error)
@@ -50,6 +51,10 @@ type ImageOperator interface {
 
 // PushImage pushes and registers the image to Lightsail service registry.
 func PushImage(ctx context.Context, in *PushImageInput, lio LightsailImageOperator, imgo ImageOperator) error {
+	if err := imgo.CheckPlatform(ctx, in.Image); err != nil {
+		return err
+	}
+
 	authConfig, err := getServiceRegistryAuth(ctx, lio)
 	if err != nil {
 		return err

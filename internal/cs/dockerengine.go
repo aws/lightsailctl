@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/api/types/versions"
@@ -36,23 +37,18 @@ func (pe *platformError) Error() string {
 
 func (pe *platformError) Unwrap() error { return pe.cause }
 
-// DockerEngine defines a subset of client-side
-// operations against local Docker Engine, relevant to lightsailctl.
+// dockerClient is the subset of the Docker client API that DockerEngine needs.
+type dockerClient interface {
+	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
+	ImageTag(ctx context.Context, source, target string) error
+	ImageRemove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error)
+	ImagePush(ctx context.Context, image string, options image.PushOptions) (io.ReadCloser, error)
+	ServerVersion(ctx context.Context) (types.Version, error)
+}
+
+// DockerEngine implements image operations against a local Docker-compatible daemon.
 type DockerEngine struct {
-	it interface {
-		ImageTag(ctx context.Context, source, target string) error
-	}
-	ir interface {
-		ImageRemove(
-			ctx context.Context, imageID string, options image.RemoveOptions,
-		) ([]image.DeleteResponse, error)
-	}
-	ip interface {
-		ImagePush(
-			ctx context.Context, image string, options image.PushOptions,
-		) (io.ReadCloser, error)
-	}
-	dc *client.Client
+	client dockerClient
 }
 
 // RemoteImage combines remote server auth details, address
@@ -73,16 +69,37 @@ func NewDockerEngine(ctx context.Context) (*DockerEngine, error) {
 		return nil, err
 	}
 	dc.NegotiateAPIVersion(ctx)
-	return &DockerEngine{it: dc, ir: dc, ip: dc, dc: dc}, nil
+	return &DockerEngine{client: dc}, nil
 }
 
 func (e *DockerEngine) TagImage(ctx context.Context, source, target string) error {
-	return e.it.ImageTag(ctx, source, target)
+	return e.client.ImageTag(ctx, source, target)
 }
 
 func (e *DockerEngine) UntagImage(ctx context.Context, imageID string) error {
-	_, err := e.ir.ImageRemove(ctx, imageID, image.RemoveOptions{})
+	_, err := e.client.ImageRemove(ctx, imageID, image.RemoveOptions{})
 	return err
+}
+
+func (e *DockerEngine) CheckPlatform(ctx context.Context, imageRef string) error {
+	// Newer Docker daemons (API >= 1.46) accept a Platform field in ImagePush
+	// and will transparently select/pull the requested variant from a
+	// multi-arch manifest. Skip the local inspect check in that case so that
+	// users on (e.g.) arm64 hosts can still push multi-arch images.
+	if sv, err := e.client.ServerVersion(ctx); err == nil && versions.GreaterThanOrEqualTo(sv.APIVersion, "1.46") {
+		return nil
+	}
+	inspect, _, err := e.client.ImageInspectWithRaw(ctx, imageRef)
+	if err != nil {
+		return fmt.Errorf("inspect image %q: %w", imageRef, err)
+	}
+	if inspect.Architecture != "amd64" || inspect.Os != "linux" {
+		return &platformError{
+			wantPlatform: &ocispec.Platform{OS: "linux", Architecture: "amd64"},
+			cause:        fmt.Errorf("image %q is %s/%s but Lightsail only supports amd64 (x86_64) architecture", imageRef, inspect.Os, inspect.Architecture),
+		}
+	}
+	return nil
 }
 
 func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (string, error) {
@@ -93,12 +110,10 @@ func (e *DockerEngine) PushImage(ctx context.Context, remoteImage RemoteImage) (
 
 	platform := &ocispec.Platform{OS: "linux", Architecture: "amd64"}
 	opts := image.PushOptions{RegistryAuth: base64.URLEncoding.EncodeToString(authBytes)}
-	if e.dc != nil {
-		if sv, err := e.dc.ServerVersion(ctx); err == nil && versions.GreaterThanOrEqualTo(sv.APIVersion, "1.46") {
-			opts.Platform = platform
-		}
+	if sv, err := e.client.ServerVersion(ctx); err == nil && versions.GreaterThanOrEqualTo(sv.APIVersion, "1.46") {
+		opts.Platform = platform
 	}
-	pushOutput, err := e.ip.ImagePush(ctx, remoteImage.Ref(), opts)
+	pushOutput, err := e.client.ImagePush(ctx, remoteImage.Ref(), opts)
 	if err != nil {
 		if platformErrorRE(platform).MatchString(err.Error()) {
 			return "", &platformError{wantPlatform: platform, cause: err}
