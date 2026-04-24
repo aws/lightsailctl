@@ -44,7 +44,7 @@ ${BOLD}OPTIONS${RESET}
   -h, --help                Show this help and exit
 
 ${BOLD}PREREQUISITES${RESET}
-  - aws CLI with valid credentials
+  - aws CLI v2 with valid credentials
   - docker (real Docker, not Finch/Podman)
   - goreleaser (run: make tools)
 
