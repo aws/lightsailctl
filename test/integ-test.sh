@@ -123,7 +123,6 @@ check_cmd() {
 }
 
 check_cmd aws        "Install the AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
-check_cmd docker     "Install Docker Desktop: https://docs.docker.com/desktop/"
 check_cmd goreleaser "Run: make tools   (installs goreleaser + golangci-lint)"
 check_cmd make       "Install GNU make (part of build-essential / Xcode Command Line Tools)."
 
@@ -137,12 +136,14 @@ if command -v aws >/dev/null 2>&1; then
   fi
 fi
 
+check_cmd docker     "Install Docker Desktop: https://docs.docker.com/desktop/"
+
 if command -v docker >/dev/null 2>&1; then
   if docker info >/dev/null 2>&1; then
     INFO_OUTPUT=$(docker info 2>/dev/null || true)
     VERSION_OUTPUT=$(docker version 2>/dev/null || true)
     COMBINED="$INFO_OUTPUT"$'\n'"$VERSION_OUTPUT"
-    if echo "$COMBINED" | grep -qE 'Docker Engine'; then
+    if echo "$COMBINED" | grep -qi 'Docker Engine'; then
       API_VERSION=$(docker version --format '{{.Server.APIVersion}}' 2>/dev/null || echo unknown)
       pass "Docker daemon reachable (API version: $API_VERSION)"
     elif echo "$COMBINED" | grep -qiE 'finch|nerdctl'; then
