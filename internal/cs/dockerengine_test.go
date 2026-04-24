@@ -46,11 +46,11 @@ type fakeDockerClient struct {
 	versionErr error
 }
 
-func (f *fakeDockerClient) ImageInspectWithRaw(_ context.Context, imageID string) (types.ImageInspect, []byte, error) {
+func (f *fakeDockerClient) ImageInspectWithRaw(_ context.Context, imageID string) (image.InspectResponse, []byte, error) {
 	if f.inspectErr != nil {
-		return types.ImageInspect{}, nil, f.inspectErr
+		return image.InspectResponse{}, nil, f.inspectErr
 	}
-	return types.ImageInspect{Os: f.inspectOS, Architecture: f.inspectArch}, nil, nil
+	return image.InspectResponse{Os: f.inspectOS, Architecture: f.inspectArch}, nil, nil
 }
 
 func (f *fakeDockerClient) ImageTag(_ context.Context, source, target string) error {
